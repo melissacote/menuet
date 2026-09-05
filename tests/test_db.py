@@ -2,7 +2,7 @@ import sqlite3
 
 import pytest
 
-from src.db import get_connection
+from src import get_connection
 
 
 def test_db_fk(conn: sqlite3.Connection) -> None:

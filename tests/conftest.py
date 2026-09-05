@@ -1,5 +1,5 @@
 import pytest
-from src.db import get_connection
+from src import get_connection
 
 @pytest.fixture
 def conn():
