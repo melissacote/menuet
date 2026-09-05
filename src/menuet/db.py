@@ -1,32 +1,30 @@
 """Database connection management."""
 
-import sqlite3
-from contextlib import contextmanager
 from pathlib import Path
 from collections.abc import Generator
+from sqlalchemy import create_engine, event, Engine
+from sqlalchemy.engine import Connection
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Get project root and create data directory if it doesn't exist
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DB_PATH = PROJECT_ROOT / "data" / "menuet.db"
+DEFAULT_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-@contextmanager
-def get_connection(db_path: str | Path = DEFAULT_DB_PATH) -> Generator[sqlite3.Connection]:
-    """Yield a configured SQLite database connection.
+def create_db_engine(url: str) -> Engine:
+    """Create an engine with foreign key enforcement enabled."""
+    engine = create_engine(url)
 
-    Foreign keys are enabled and rows are returned as sqlite3.Row.
-    The caller of the connection commits.
-    """
+    @event.listens_for(engine, "connect")
+    def _enable_foreign_keys(dbapi_conn, _connection_record):
+        dbapi_conn.execute("PRAGMA foreign_keys = ON")
 
-    # Create directory if it does not already exist
-    if db_path != ":memory:":
-        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+    return engine
 
-    conn = sqlite3.connect(db_path)
+engine = create_db_engine(f"sqlite:///{DEFAULT_DB_PATH}")
 
-    # Configure connection
-    conn.execute("PRAGMA foreign_keys = ON")
-    conn.row_factory = sqlite3.Row
-
-    try:
+def get_connection() -> Generator[Connection]:
+    """Yield a connection to the default database. The caller commits."""
+    with engine.connect() as conn:
         yield conn
-    finally:
-        conn.close()
+
+
