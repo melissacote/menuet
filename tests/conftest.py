@@ -1,7 +1,10 @@
 import pytest
-from src import get_connection
+from menuet.db import create_db_engine
+from menuet.schema import metadata
 
 @pytest.fixture
 def conn():
-    with get_connection(":memory:") as c:
+    engine = create_db_engine("sqlite://")
+    metadata.create_all(engine)
+    with engine.connect() as c:
         yield c
