@@ -3,6 +3,49 @@ from sqlalchemy import MetaData, Table, Column, Integer, Text, CheckConstraint, 
 metadata = MetaData()
 
 # *** RECIPE LIBRARY ***
+sources = Table(
+    'Sources', metadata,
+    Column('source_id', Integer, primary_key=True),
+    Column('source_type', Text,
+           CheckConstraint("source_type IN ('url', 'book', 'other')"),
+           nullable=False),
+    Column('url', Text),
+    Column('book_title', Text),
+    Column('book_author', Text),
+    Column('description', Text), # description is used for other type
+    CheckConstraint(
+        "(source_type = 'url' AND url IS NOT NULL "
+        "AND book_title IS NULL AND book_author IS NULL "
+        "AND description IS NULL) OR "
+        "(source_type = 'book' AND book_title IS NOT NULL "
+        "AND url IS NULL AND description IS NULL) OR "
+        "(source_type = 'other' AND description IS NOT NULL "
+        "AND url IS NULL AND book_title IS NULL "
+        "AND book_author IS NULL)",
+        name='ck_source_type_fields'
+    ),
+    sqlite_strict=True
+)
+
+Index(
+    'idx_source_url_unique',
+    func.lower(func.trim(sources.c.url)),
+    unique=True,
+)
+
+Index(
+    'idx_source_book_unique',
+    func.lower(func.trim(sources.c.book_title)),
+    func.lower(func.trim(sources.c.book_author)),
+    unique=True,
+)
+
+Index(
+    'idx_source_description_unique',
+    func.lower(func.trim(sources.c.description)),
+    unique=True,
+)
+
 recipes = Table(
     'Recipes', metadata,
     Column('recipe_id', Integer, primary_key=True),
@@ -13,7 +56,9 @@ recipes = Table(
            CheckConstraint('effort_rating BETWEEN 1 AND 5')),
     Column('weather', Text,
            CheckConstraint("weather IN ('warm', 'cool')")),
-    Column('source', Text, nullable=False),
+    Column('source_id', Integer,
+           ForeignKey("Sources.source_id",),
+           nullable=False),
     Column('ever_cooked', Integer,
            CheckConstraint("ever_cooked IN (0, 1)"),
            nullable=False, server_default=text('0')),
