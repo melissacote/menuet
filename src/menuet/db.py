@@ -4,7 +4,7 @@ from pathlib import Path
 from functools import cache
 from collections.abc import Generator
 from sqlalchemy import create_engine, event, Engine, StaticPool
-from sqlalchemy.engine import Connection
+from sqlalchemy import Connection
 
 
 # Get project root and create data directory if it doesn't exist
