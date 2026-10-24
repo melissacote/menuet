@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 
 from menuet.schema import metadata
-from menuet.db import engine, create_db_engine
+from menuet.db import get_engine, create_db_engine
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -63,7 +63,7 @@ def run_migrations_online() -> None:
         if url:
             connectable = create_db_engine(url)
         else:
-            connectable = engine
+            connectable = get_engine()
 
     with connectable.connect() as connection:
         context.configure(

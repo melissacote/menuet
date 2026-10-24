@@ -1,14 +1,15 @@
 """Database connection management."""
 
 from pathlib import Path
+from functools import cache
 from collections.abc import Generator
 from sqlalchemy import create_engine, event, Engine, StaticPool
 from sqlalchemy.engine import Connection
 
+
 # Get project root and create data directory if it doesn't exist
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DB_PATH = PROJECT_ROOT / "data" / "menuet.db"
-DEFAULT_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 def create_db_engine(url: str) -> Engine:
     """Create an engine with foreign key enforcement enabled.
@@ -24,11 +25,18 @@ def create_db_engine(url: str) -> Engine:
 
     return new_engine
 
-engine = create_db_engine(f"sqlite:///{DEFAULT_DB_PATH}")
+@cache
+def get_engine() -> Engine:
+    """
+
+    :return:
+    """
+    DEFAULT_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    return create_db_engine(f"sqlite:///{DEFAULT_DB_PATH}")
 
 def get_connection() -> Generator[Connection]:
     """Yield a connection to the default database. The caller commits."""
-    with engine.connect() as conn:
+    with get_engine().connect() as conn:
         yield conn
 
 
