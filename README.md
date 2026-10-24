@@ -21,5 +21,10 @@ Menuet is a personal meal-planning app for storing recipes, tagging them, and bu
 git clone https://github.com/melissacote/menuet.git
 cd menuet
 pip install -e ".[dev]"
+
+# Create the local database (data/menuet.db) and apply migrations.
+# Run from the project root, where alembic.ini lives.
+alembic upgrade head
+
 python -m pytest -v
 ```
