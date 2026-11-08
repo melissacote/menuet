@@ -17,7 +17,7 @@ sources = Table(
         "(source_type = 'url' AND url IS NOT NULL "
         "AND book_title IS NULL AND book_author IS NULL "
         "AND description IS NULL) OR "
-        "(source_type = 'book' AND book_title IS NOT NULL "
+        "(source_type = 'book' AND book_title IS NOT NULL AND book_author IS NOT NULL "
         "AND url IS NULL AND description IS NULL) OR "
         "(source_type = 'other' AND description IS NOT NULL "
         "AND url IS NULL AND book_title IS NULL "
