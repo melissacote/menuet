@@ -1,8 +1,8 @@
 from sqlalchemy import Connection, select
-from menuet.data_access.sources import get_or_create_source_url
+from menuet.data_access.sources import get_or_create_source_url, get_or_create_source_book
 from menuet.schema import sources
 
-
+# region url tests
 def test_get_or_create_source_url(conn: Connection) -> None:
     """
     Assert that get_or_create_source_url adds a new url source to the database.
@@ -43,3 +43,53 @@ def test_get_or_create_source_url_original_preserved(conn: Connection) -> None:
     source_id = get_or_create_source_url(conn, "https://www.example.com/Recipe")
     row = conn.execute(select(sources.c.url).where(sources.c.source_id == source_id)).one()
     assert row.url == "https://www.example.com/Recipe"
+# endregion url tests
+
+# region book tests
+def test_get_or_create_source_book(conn: Connection) -> None:
+    """
+    Assert that get_or_create_source_book adds a new book source to the database.
+    """
+    source_id = get_or_create_source_book(conn, "Test Book", "Test Author")
+    row = conn.execute(select(sources).where(sources.c.source_id == source_id)).one()
+    assert row.source_type == "book"
+    assert row.book_title == "Test Book"
+    assert row.book_author == "Test Author"
+
+def test_get_or_create_source_book_returns_existing_duplicate(conn: Connection) -> None:
+    """
+    Assert that a book matching an existing title and author (ignoring case and
+    surrounding whitespace) returns the existing source_id.
+    """
+    first_id = get_or_create_source_book(conn, "  TEST book ", " test AUTHOR  ")
+    second_id = get_or_create_source_book(conn, "Test Book", "Test Author")
+    assert first_id == second_id
+
+
+def test_get_or_create_source_book_same_title_different_author(conn: Connection) -> None:
+    """
+    Assert that a book with the same title but a different author is a new source.
+    """
+    first_id = get_or_create_source_book(conn, "Test Book", "Author One")
+    second_id = get_or_create_source_book(conn, "Test Book", "Author Two")
+    assert first_id != second_id
+
+
+def test_get_or_create_source_book_same_author_different_title(conn: Connection) -> None:
+    """
+    Assert that a book with the same author but a different title is a new source.
+    """
+    first_id = get_or_create_source_book(conn, "Book One", "Test Author")
+    second_id = get_or_create_source_book(conn, "Book Two", "Test Author")
+    assert first_id != second_id
+
+
+def test_get_or_create_source_book_stores_as_given(conn: Connection) -> None:
+    """
+    Assert that the title and author are stored exactly as given, not normalized.
+    """
+    source_id = get_or_create_source_book(conn, "  TEST book ", " test AUTHOR  ")
+    row = conn.execute(select(sources).where(sources.c.source_id == source_id)).one()
+    assert row.book_title == "  TEST book "
+    assert row.book_author == " test AUTHOR  "
+# endregion book tests
