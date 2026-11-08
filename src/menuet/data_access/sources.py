@@ -24,7 +24,8 @@ def get_or_create_source_url(conn: Connection, url: str) -> int:
 def get_or_create_source_book(conn: Connection, book_title: str, book_author: str) -> int:
     """Insert a book source if new and return source_id for new or existing.
 
-    Does not commit; the caller commits."""
+    Does not commit; the caller commits.
+    """
 
     # Check for existing source and return if found
     check_stmt = select(sources.c.source_id).where(
@@ -43,7 +44,8 @@ def get_or_create_source_book(conn: Connection, book_title: str, book_author: st
 def get_or_create_source_other(conn: Connection, description: str) -> int:
     """Insert a source (other type) if new and return source_id for new or existing.
 
-    Does not commit; the caller commits."""
+    Does not commit; the caller commits.
+    """
 
     # Check for existing source and return if found
     check_stmt = select(sources.c.source_id).where(
