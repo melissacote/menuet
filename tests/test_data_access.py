@@ -12,6 +12,7 @@ def test_get_or_create_source_url(conn: Connection) -> None:
     assert row.source_type == "url"
     assert row.url == "https://www.example.com/recipe"
 
+
 def test_get_or_create_source_url_duplicates(conn: Connection) -> None:
     """
     Assert that get_or_create_source_url returns the correct id for a duplicate.
@@ -19,6 +20,7 @@ def test_get_or_create_source_url_duplicates(conn: Connection) -> None:
     source_id = get_or_create_source_url(conn, "https://www.example.com/recipe")
     duplicate_source_id = get_or_create_source_url(conn, "https://www.example.com/recipe")
     assert source_id == duplicate_source_id
+
 
 def test_get_or_create_source_url_case_insensitive(conn: Connection) -> None:
     """
@@ -28,6 +30,7 @@ def test_get_or_create_source_url_case_insensitive(conn: Connection) -> None:
     duplicate_source_id = get_or_create_source_url(conn, "https://www.example.com/recipe")
     assert source_id == duplicate_source_id
 
+
 def test_get_or_create_source_url_whitespace(conn: Connection) -> None:
     """
     Assert that get_or_create_source_url correctly ignores whitespace for duplicate checks.
@@ -35,6 +38,7 @@ def test_get_or_create_source_url_whitespace(conn: Connection) -> None:
     source_id = get_or_create_source_url(conn, "https://www.example.com/recipe ")
     duplicate_source_id = get_or_create_source_url(conn, "https://www.example.com/recipe")
     assert source_id == duplicate_source_id
+
 
 def test_get_or_create_source_url_original_preserved(conn: Connection) -> None:
     """
@@ -55,6 +59,7 @@ def test_get_or_create_source_book(conn: Connection) -> None:
     assert row.source_type == "book"
     assert row.book_title == "Test Book"
     assert row.book_author == "Test Author"
+
 
 def test_get_or_create_source_book_returns_existing_duplicate(conn: Connection) -> None:
     """
@@ -131,4 +136,4 @@ def test_get_or_create_source_other_stores_as_given(conn: Connection) -> None:
     source_id = get_or_create_source_other(conn, "  MEMAW'S recipe Card ")
     row = conn.execute(select(sources).where(sources.c.source_id == source_id)).one()
     assert row.description == "  MEMAW'S recipe Card "
-#endregion other tests
+# endregion other tests
