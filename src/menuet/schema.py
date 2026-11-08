@@ -7,7 +7,8 @@ sources = Table(
     'Sources', metadata,
     Column('source_id', Integer, primary_key=True),
     Column('source_type', Text,
-           CheckConstraint("source_type IN ('url', 'book', 'other')"),
+           CheckConstraint("source_type IN ('url', 'book', 'other')",
+                           name='ck_sources_source_type'),
            nullable=False),
     Column('url', Text),
     Column('book_title', Text),
@@ -17,7 +18,7 @@ sources = Table(
         "(source_type = 'url' AND url IS NOT NULL "
         "AND book_title IS NULL AND book_author IS NULL "
         "AND description IS NULL) OR "
-        "(source_type = 'book' AND book_title IS NOT NULL "
+        "(source_type = 'book' AND book_title IS NOT NULL AND book_author IS NOT NULL "
         "AND url IS NULL AND description IS NULL) OR "
         "(source_type = 'other' AND description IS NOT NULL "
         "AND url IS NULL AND book_title IS NULL "
@@ -51,19 +52,24 @@ recipes = Table(
     Column('recipe_id', Integer, primary_key=True),
     Column('recipe_name', Text, nullable=False),
     Column('like_rating', Integer,
-           CheckConstraint('like_rating BETWEEN 1 AND 5')),
+           CheckConstraint('like_rating BETWEEN 1 AND 5',
+                           name='ck_recipes_like_rating')),
     Column('effort_rating', Integer,
-           CheckConstraint('effort_rating BETWEEN 1 AND 5')),
+           CheckConstraint('effort_rating BETWEEN 1 AND 5',
+                           name='ck_recipes_effort_rating')),
     Column('weather', Text,
-           CheckConstraint("weather IN ('warm', 'cool')")),
+           CheckConstraint("weather IN ('warm', 'cool')",
+                           name='ck_recipes_weather')),
     Column('source_id', Integer,
            ForeignKey("Sources.source_id",),
            nullable=False),
     Column('ever_cooked', Integer,
-           CheckConstraint("ever_cooked IN (0, 1)"),
+           CheckConstraint("ever_cooked IN (0, 1)",
+                           name='ck_recipes_ever_cooked'),
            nullable=False, server_default=text('0')),
     Column('is_included', Integer,
-           CheckConstraint('is_included IN (0, 1)'),
+           CheckConstraint('is_included IN (0, 1)',
+                           name='ck_recipes_is_included'),
            nullable=False, server_default=text('1')),
     sqlite_strict=True
 )
@@ -81,7 +87,8 @@ tags = Table(
     Column('tag_category', Text,
            CheckConstraint(
                "tag_category IN "
-               "('cuisine', 'style', 'starch', 'protein', 'appliance')"
+               "('cuisine', 'style', 'starch', 'protein', 'appliance')",
+               name='ck_tags_tag_category'
            ),
            nullable=False),
     sqlite_strict=True
@@ -111,14 +118,18 @@ preference_sets = Table(
     Column('pref_set_id', Integer, primary_key=True),
     Column('set_name', Text, nullable=False),
     Column('is_default', Integer,
-           CheckConstraint('is_default IN (0, 1)'),
+           CheckConstraint('is_default IN (0, 1)',
+                           name='ck_preferencesets_is_default'),
            nullable=False, server_default=text('0')),
     Column('min_like_rating', Integer,
-           CheckConstraint('min_like_rating BETWEEN 1 AND 5')),
+           CheckConstraint('min_like_rating BETWEEN 1 AND 5',
+                           name='ck_preferencesets_min_like_rating')),
     Column('max_effort_rating', Integer,
-           CheckConstraint('max_effort_rating BETWEEN 1 AND 5')),
+           CheckConstraint('max_effort_rating BETWEEN 1 AND 5',
+                           name='ck_preferencesets_max_effort_rating')),
     Column('weather_filter', Text,
-           CheckConstraint("weather_filter IN ('warm', 'cool')")),
+           CheckConstraint("weather_filter IN ('warm', 'cool')",
+                           name='ck_preferencesets_weather_filter')),
     sqlite_strict=True
 )
 
@@ -147,7 +158,8 @@ menu_items = Table(
            ForeignKey("Recipes.recipe_id"),
            nullable=False, primary_key=True),
     Column('was_cooked', Integer,
-           CheckConstraint('was_cooked IN (0, 1)'),
+           CheckConstraint('was_cooked IN (0, 1)',
+                           name='ck_menuitems_was_cooked'),
            nullable=False, server_default=text('0')),
     sqlite_strict=True
 )
@@ -158,10 +170,12 @@ category_limits = Table(
            ForeignKey("PreferenceSets.pref_set_id", ondelete="CASCADE"),
            nullable=False, primary_key=True),
     Column('tag_category', Text,
-           CheckConstraint("tag_category IN ('cuisine', 'style', 'starch', 'protein', 'appliance')"),
+           CheckConstraint("tag_category IN ('cuisine', 'style', 'starch', 'protein', 'appliance')",
+                           name='ck_categorylimits_tag_category'),
            nullable=False, primary_key=True),
     Column('max_count', Integer,
-           CheckConstraint('max_count >= 0'),
+           CheckConstraint('max_count >= 0',
+                           name='ck_categorylimits_max_count'),
            nullable=False),
     sqlite_strict=True
 )
@@ -175,7 +189,8 @@ tag_limits = Table(
            ForeignKey("Tags.tag_id", ondelete="CASCADE"),
            nullable=False, primary_key=True),
     Column('max_count', Integer,
-           CheckConstraint('max_count >= 0'),
+           CheckConstraint('max_count >= 0',
+                           name='ck_taglimits_max_count'),
            nullable=False),
     sqlite_strict=True
 )

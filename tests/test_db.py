@@ -12,7 +12,7 @@ def test_db_fk(conn: Connection) -> None:
 
 def test_insert_recipe(conn: Connection) -> None:
     """Assert that a recipe can be inserted and expected values (including defaults) returned."""
-    source = conn.execute(insert(sources).values(source_type='book', book_title='test_book'))
+    source = conn.execute(insert(sources).values(source_type='book', book_title='test_book', book_author='test_author'))
     source_id = source.inserted_primary_key[0]
 
     conn.execute(insert(recipes).values(recipe_name='test', like_rating=3, source_id=source_id))
@@ -26,7 +26,7 @@ def test_insert_recipe(conn: Connection) -> None:
 
 def test_check_constraint_fail(conn: Connection) -> None:
     """Assert that check constraint rejects invalid input."""
-    source = conn.execute(insert(sources).values(source_type='book', book_title='test_book'))
+    source = conn.execute(insert(sources).values(source_type='book', book_title='test_book', book_author='test_author'))
     source_id = source.inserted_primary_key[0]
 
     with pytest.raises(IntegrityError):
@@ -34,7 +34,7 @@ def test_check_constraint_fail(conn: Connection) -> None:
 
 def test_unique_index_allows_distinct_names(conn: Connection) -> None:
     """Assert that unique index accepts distinct values."""
-    source = conn.execute(insert(sources).values(source_type='book', book_title='test_book'))
+    source = conn.execute(insert(sources).values(source_type='book', book_title='test_book', book_author='test_author'))
     source_id = source.inserted_primary_key[0]
 
     conn.execute(insert(recipes).values(recipe_name='test', like_rating=3, source_id=source_id))
@@ -42,7 +42,7 @@ def test_unique_index_allows_distinct_names(conn: Connection) -> None:
 
 def test_unique_index_case(conn: Connection) -> None:
     """Assert that unique index rejects values based on case."""
-    source = conn.execute(insert(sources).values(source_type='book', book_title='test_book'))
+    source = conn.execute(insert(sources).values(source_type='book', book_title='test_book', book_author='test_author'))
     source_id = source.inserted_primary_key[0]
 
     conn.execute(insert(recipes).values(recipe_name='test', like_rating=3, source_id=source_id))
@@ -57,18 +57,18 @@ def test_unique_index_whitespace(conn: Connection) -> None:
 
 def test_sources_check_allows(conn: Connection) -> None:
     """Assert that source insert check allows appropriate insertions."""
-    conn.execute(insert(sources).values(source_type='book', book_title='test_book'))
+    conn.execute(insert(sources).values(source_type='book', book_title='test_book', book_author='test_author'))
     conn.execute(insert(sources).values(source_type='url', url='test_url'))
     conn.execute(insert(sources).values(source_type='other', description='text'))
 
 def test_sources_check_forbids(conn: Connection) -> None:
     """Assert that source insert check forbids inappropriate insertions."""
     with pytest.raises(IntegrityError):
-        conn.execute(insert(sources).values(source_type='book', book_title='test_book', url='test_url'))
+        conn.execute(insert(sources).values(source_type='book', book_title='test_book', book_author='test_author', url='test_url'))
 
 def test_recipetags_foreignkey_cascade(conn: Connection) -> None:
     """Assert that Recipes row deletion cascades to RecipeTags as expected."""
-    source = conn.execute(insert(sources).values(source_type='book', book_title='test_book'))
+    source = conn.execute(insert(sources).values(source_type='book', book_title='test_book', book_author='test_author'))
     source_id = source.inserted_primary_key[0]
     tag = conn.execute(insert(tags).values(tag_name='test', tag_category='cuisine'))
     tag_id = tag.inserted_primary_key[0]
@@ -85,13 +85,17 @@ def test_recipetags_foreignkey_cascade(conn: Connection) -> None:
 
 def test_sources_delete_restricted(conn: Connection) -> None:
     """Assert that a source referenced by a recipe cannot be deleted."""
-    source = conn.execute(insert(sources).values(source_type='book', book_title='test_book'))
+    source = conn.execute(insert(sources).values(source_type='book', book_title='test_book', book_author='test_author'))
     source_id = source.inserted_primary_key[0]
     conn.execute(insert(recipes).values(recipe_name='test', like_rating=3, source_id=source_id))
 
     with pytest.raises(IntegrityError):
         conn.execute(delete(sources))
 
+def test_sources_requires_author(conn: Connection) -> None:
+    """Assert that a book source cannot be inserted without an author."""
+    with pytest.raises(IntegrityError, match='ck_source_type_fields'):
+        conn.execute(insert(sources).values(source_type='book', book_title='test_book'))
 
 
 
